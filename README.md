@@ -48,3 +48,7 @@ This script reads **all** `.txt` from `traces/`, delete double code, and generat
 - [ ] Jump, roll
 - [ ] Attack an ennemi / die
 - [ ] Animals buddy
+
+## TODO
+
+- [] Translate RAM_Map from french.
