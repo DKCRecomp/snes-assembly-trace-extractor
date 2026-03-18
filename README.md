@@ -30,25 +30,3 @@ bash extract-traces.sh
 ```
 
 This script reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `src/`.
-
-## Progress
-
-| Bank | Identified content | Statut |
-|---|---|---|
-| $00 | RESET, Init bootstrap, DMA setup | Partial |
-| $B8 | PPU Hardware Init | Complete |
-| SPC700 | Boot ROM Sony | Complete |
-| $80 | Main loop, NMI, IRQ | Empty |
-| $81–$8F | Game logic code | Empty |
-
-## Sessions to record
-
-- [ ] Complete boot / start screen sequence
-- [ ] Gameplay 30s level 1
-- [ ] Jump, roll
-- [ ] Attack an ennemi / die
-- [ ] Animals buddy
-
-## TODO
-
-- [ ] Translate RAM_Map from french.
