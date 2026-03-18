@@ -1,6 +1,8 @@
-# DKC1 SNES — Decompiled Code
+# SNES ASM Code Cleaner & Extractor 
 
-Decompiled source code of **Donkey Kong Country** (ROM USA V1.0).
+It cleans and sorts a .txt log trace file from SNES emulation debug sessions on Mesen. 
+
+Tool made for a **Donkey Kong Country** recompilation effort. 
 
 No ROM, assets, or extracted code in this repository.
 
@@ -49,4 +51,4 @@ This script reads **all** `.txt` from `traces/`, delete double code, and generat
 
 ## TODO
 
-- [] Translate RAM_Map from french.
+- [ ] Translate RAM_Map from french.
