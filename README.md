@@ -1,10 +1,14 @@
-# SNES ASM Code Cleaner & Extractor 
+# SNES Assembly extractor 
 
-It cleans and sorts a .txt log trace file from SNES emulation debug sessions on Mesen. 
+This tool reads [Mesen emulator](https://github.com/SourMesen/Mesen2) `.txt` log traces, delete double code, and generate structured `.asm` files.
 
-Tool made for a **Donkey Kong Country** recompilation effort. 
+Originally made for a **Donkey Kong Country** recompilation effort. 
 
-No ROM, assets, or extracted code in this repository.
+This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I guess any `.txt` log traces from any emulator would work.
+This tool has no dependencies with Mesen.
+
+> [!IMPORTANT]
+> **No rom, assets, nor extracted code in this repository**.
 
 ## How to use it ?
 
@@ -18,9 +22,7 @@ Launch Game -> Stop -> Save traces as .txt
 **2. Place logs in `traces/`**
 
 ```txt
-traces/boot_session1.txt
-traces/gameplay_jungle.txt
-traces/player_jump.txt
+traces/super_mario_world_logs.txt
 ```
 
 **3. Run script**
@@ -29,4 +31,4 @@ traces/player_jump.txt
 bash extract-traces.sh
 ```
 
-This script reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `src/`.
+This will reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `src/`.
