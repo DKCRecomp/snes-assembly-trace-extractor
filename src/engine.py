@@ -48,24 +48,27 @@ def load_traces():
 
         file_size = file.stat().st_size // 1024
         print(f"  - Reading {file.name} ({file_size} Ko)")
+                
+        print(f"    - Creating {Path(file.name).with_suffix('')} folder")
+        create_trace_folder(file.name)
 
         for line in file.open(encoding='utf-8', errors='replace'):
             line = line.rstrip()
-            m = data.PAT_65816.match(line)
+            match = data.PAT_65816.match(line)
 
-            if m:
-                addr = m.group(1)
+            if match:
+                addr = match.group(1)
                 hits[addr] += 1
                 if addr not in seen:
-                    seen[addr] = {'instr': m.group(2).strip(), 'P': m.group(6)}
+                    seen[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
                 continue
-            m = data.PAT_SPC700.match(line)
 
-            if m:
-                addr = m.group(1)
+            match = data.PAT_SPC700.match(line)
+            if match:
+                addr = match.group(1)
                 hits_s[addr] += 1
                 if addr not in seen_s:
-                    seen_s[addr] = m.group(2).strip()
+                    seen_s[addr] = match.group(2).strip()
 
     return seen, hits, seen_s, hits_s
 
@@ -87,9 +90,9 @@ def comment_instr(instr, hits_addr):
         m2 = re.search(r'#\$([0-9A-F]{2})', instr)
         if m2:
             v = int(m2.group(1), 16)
-            taille = '16' if mnem == 'REP' else '8'
-            if v & 0x20: parts.append(f'A={taille}b')
-            if v & 0x10: parts.append(f'X/Y={taille}b')
+            size = '16' if mnem == 'REP' else '8'
+            if v & 0x20: parts.append(f'A={size}b')
+            if v & 0x10: parts.append(f'X/Y={size}b')
 
     # Loop detected
     if hits_addr > 1:
@@ -105,10 +108,9 @@ def write_bank(bank_id, adresses, seen, hits):
     file = dir_path / f'Bank_{bank_id}.asm'
 
     content = [
+        f'; {GAME_FOLDER_NAME}',
         f'; Bank ${bank_id}',
         f'; {len(adresses)} uniques instructions',
-        f'; Generated from {TRACES_DIR}',
-        f'; To write comments: Bank_{bank_id}_annotated.asm in the directory',
         '',
     ]
 
@@ -151,6 +153,18 @@ def write_spc(seen_s, hits_s):
     file.write_text('\n'.join(content) + '\n')
     return file
 
+def create_trace_folder(file_name):
+
+    # Remove `.txt` from file name
+    global GAME_FOLDER_NAME
+    GAME_FOLDER_NAME = Path(file_name).with_suffix('')
+
+    # We update globally code path for each trace file
+    global CODE_PATH 
+    CODE_PATH = REPO_ROOT / CODE_DIR / GAME_FOLDER_NAME
+
+    CODE_PATH.mkdir(parents=True, exist_ok=True)
+
 def trace_to_asm():
 
     print(f'Reading in {TRACES_PATH}')
@@ -165,7 +179,7 @@ def trace_to_asm():
 
     print(f'')
     print(f'Results :')
-    print(f'    65c816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
+    print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
     print(f'    SPC700  : {sum(hits_s.values())} lines -> {len(seen_s)} uniques')
     print(f'    Banks : {banks}')
 
@@ -180,19 +194,21 @@ def trace_to_asm():
 
     for bank, addrs in sorted(by_bank.items()):
         f = write_bank(bank, addrs, seen, hits)
-        print(f'    -> {f.relative_to(REPO_ROOT)}  ({len(addrs)} instrs)')
+        print(f'    - {f.relative_to(REPO_ROOT)}  ({len(addrs)} instructions)')
 
     if seen_s:
         f = write_spc(seen_s, hits_s)
-        print(f'    -> {f.relative_to(REPO_ROOT)}  ({len(seen_s)} instrs)')
+        print(f'    - {f.relative_to(REPO_ROOT)}  ({len(seen_s)} instructions)')
 
 def main():
     print('================================================================')
-    print(f'Starting converting code from : {TRACES_DIR}')
+    print(f'            SNES Assembly Log Trace Extractor')
     print('================================================================')
+    print('')
 
     trace_to_asm()
 
+    print('')
     print('==================================')
     print(f'            Finished')
     print('==================================')
