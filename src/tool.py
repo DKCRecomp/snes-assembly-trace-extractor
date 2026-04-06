@@ -35,6 +35,8 @@ def print_end():
 # /--------------------------------------/
 
 def extract_traces_files():
+    """Extract all available traces files."""
+
     print('Start extracting traces...\n')
 
     config.KEEP_LOOP_TRACK = ask_keep_looped()
@@ -44,6 +46,7 @@ def extract_traces_files():
         extract_trace_file(file)
 
 def extract_trace_file(file):
+    """Extract given trace files."""
 
     print('\n==============================================================')
     print(f'                Extracting {file.name}...')
