@@ -38,7 +38,7 @@ Press play button on the upper left to start trace creation :
 ![trace-log-run](./assets/trace-log-run.png)
 
 > [!WARNING]
-> Trace logging can quickly generate VERY large .txt file, a 20min session can create up to a ~180 Go file !
+> Trace logging can quickly generate VERY large .txt file, a 20min session can take up to ~60 Go !
 > Make sure you got large free space to do so
 
 ## How to use it ?
