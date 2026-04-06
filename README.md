@@ -9,35 +9,37 @@ This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don
 > [!IMPORTANT]
 > **No rom, assets, nor extracted code in this repository**.
 
-## How to create a game code log trace ?
+## How to create a game code trace log ?
 
-### **1. Code capture from Mesen-S (or any emulator)**
+### **1. Code capture using Mesen**
 
 On the toolbar at the top, select `Trace Logger` :
 
-![step1](./assets/step1-toolbar.png)
+![toolbar](./assets/toolbar.png)
 
 ### **Make sure you got these exact settings for better compatibility :**
 
-![step2](./assets/step2-settings.png)
-
+![trace-logger-settings](./assets/settings.png)
 
 ### **3. Log to a `.txt` file**
 
-Select `Log to file...` and save it as a `.txt` file anywhere you want :
+Select `Log to file...` :
 
-![step3](./assets/step3-log-to-file.png)
+![log-to-file](./assets/log-to-file.png)
 
-### **4. Start trace creation**
+Save it as a `.txt` file in `this-project/traces` :
+
+![place-traces](./assets/place-traces.png)
+
+### **4. Start trace log creation**
 
 Press play button on the upper left to start trace creation :
 
-![step4](./assets/step4-trace-log-run.png)
+![trace-log-run](./assets/trace-log-run.png)
 
-
-### **5. Place logs in `this-project/traces` :**
-
-![step5](./assets/step5-place-traces.png)
+> [!WARNING]
+> Trace logging can quickly generate VERY large .txt file, a 20min session can create up to a ~180 Go file !
+> Make sure you got large free space to do so
 
 ## How to use it ?
 
@@ -50,3 +52,6 @@ This will reads **all** `.txt` from `traces/`, delete double code, and generate 
 Here is a result example with a trace log named `DKC1_USA1_2.txt` :
 
 ![result](./assets/process-code-result.png)
+
+> [!NOTE]
+> This process can be long depending on the trace files size.
