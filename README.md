@@ -9,7 +9,7 @@ This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don
 Still in active developpement and might not work for now.
 
 > [!IMPORTANT]
-> **No rom, img, nor extracted code in this repository**.
+> **No rom, game assets, nor extracted code in this repository**.
 
 ## How to create a game code trace log ?
 
