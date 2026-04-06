@@ -6,8 +6,6 @@ It handles code repetitions and SPC700 audio code.
 
 This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don't guarantee if it works for other emulators. Contact me if it does.
 
-Still in active developpement and might not work for now.
-
 > [!IMPORTANT]
 > **No rom, game assets, nor extracted code in this repository**.
 
