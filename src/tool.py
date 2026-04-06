@@ -50,27 +50,9 @@ def extract_trace_file(file):
 
     # 1) load result
     seen, hits, seen_s, hits_s = read_trace_file(file)
-    
+
     # 2) code generation
     generate_trace_code(seen, hits, seen_s, hits_s)
-
-def generate_trace_code(seen, hits, seen_s, hits_s):
-
-    print('\n==============================================================')
-    print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
-    print('==============================================================\n')
-
-    by_bank = defaultdict(list)
-    for addr in seen:
-        by_bank[addr[:2]].append(addr)
-
-    for bank, addrs in sorted(by_bank.items()):
-        file = write_bank(bank, addrs, seen, hits)
-        print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(addrs)} instructions)')
-
-    if seen_s:
-        file = write_audio(seen_s, hits_s)
-        print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_s)} instructions)')
 
 def ask_keep_looped():
     return input('Keep tracked looped code in result ? (y/n): ').lower().startswith('y')
@@ -163,6 +145,24 @@ def print_trace_load(seen, hits, seen_s, hits_s):
     print(f'    Detected Banks  : {banks}')
 
 # /--------------------------------------/
+
+def generate_trace_code(seen, hits, seen_s, hits_s):
+
+    print('\n==============================================================')
+    print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
+    print('==============================================================\n')
+
+    by_bank = defaultdict(list)
+    for addr in seen:
+        by_bank[addr[:2]].append(addr)
+
+    for bank, addrs in sorted(by_bank.items()):
+        file = write_bank(bank, addrs, seen, hits)
+        print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(addrs)} instructions)')
+
+    if seen_s:
+        file = write_audio(seen_s, hits_s)
+        print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_s)} instructions)')
 
 def write_bank(bank_id, adresses, seen, hits):
     """Write Bank_XX/Bank_XX.asm"""
