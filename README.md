@@ -6,6 +6,8 @@ It handles code repetitions and SPC700 audio code.
 
 This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don't guarantee if it works for other emulators. Contact me if so.
 
+Still in active developpement and might not work for now.
+
 > [!IMPORTANT]
 > **No rom, assets, nor extracted code in this repository**.
 
@@ -38,8 +40,8 @@ Press play button on the upper left to start trace creation :
 ![trace-log-run](./assets/trace-log-run.png)
 
 > [!WARNING]
-> Trace logging can quickly generate VERY large .txt file, a 20min session can take up to ~60 Go !
-> Make sure you got large free space to do so
+> Trace logging can quickly generate VERY large .txt file, a file from a 20min session can take up to ~60 Go !
+> Make sure you got large free space.
 
 ## How to use it ?
 
