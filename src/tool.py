@@ -18,40 +18,41 @@ import config
 
 def main():
     print_start()
-    extract_traces()
+    extract_traces_files()
     print_end()
 
 def print_start():
-    print('')
     print('==============================================================')
     print(f'            SNES Assembly Log Trace Extractor')
     print('==============================================================')
-    print(f'\nResult is generated in : {config.CODE_PATH}\n')
+    print(f'\nResults are generated at : {config.CODE_PATH}\n')
 
 def print_end():
-
-    print('')
     print('==================================')
     print(f'            Finished')
-    print('==================================')
-    print('')
+    print('==================================\n')
 
 # /--------------------------------------/
 
-def extract_traces():
+def extract_traces_files():
+    print('Start extracting traces...\n')
+
     config.KEEP_LOOP_TRACK = ask_keep_looped()
-    files = load_traces_files()
+    files = get_traces_files()
     
     for file in files:
-        extract_trace(file)
+        extract_trace_file(file)
 
-def extract_trace(file):
+def extract_trace_file(file):
 
-    print(f'Processing {file.name}')
+    print('\n==============================================================')
+    print(f'                Extracting {file.name}...')
+    print('==============================================================\n')
 
     # ----- 1) load result -----
     
-    seen, hits, seen_s, hits_s = load_trace_file(file)
+    update_trace_dir(file.name)
+    seen, hits, seen_s, hits_s = read_trace_file(file)
 
     total_lines_nb = sum(hits.values())
     unique_lines_nb = len(seen)
@@ -69,9 +70,10 @@ def extract_trace(file):
 
     # ----- 2) code writing -----
 
-    print('')
-    print(f'Writing in {config.CODE_DIR}')
-
+    print('\n==============================================================')
+    print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
+    print('==============================================================\n')
+ 
     by_bank = defaultdict(list)
     for addr in seen:
         by_bank[addr[:2]].append(addr)
@@ -84,35 +86,33 @@ def extract_trace(file):
         file = write_audio(seen_s, hits_s)
         print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_s)} instructions)')
 
-    print('')
-
 def ask_keep_looped():
-    return input('Keep the tracked looped code in result ? (y/n): ').lower().startswith('y')
+    return input('Keep tracked looped code in result ? (y/n): ').lower().startswith('y')
 
 # /--------------------------------------/
 
-def load_traces_files():
+def get_traces_files():
     """Load all files from traces directory, and return them."""
 
-    files = sorted(config.TRACES_PATH.glob(f'*.{config.TRACES_EXTENSION}'))
+    files = sorted(config.TRACES_PATH.glob(f'*.{config.TRACES_EXT}'))
+
     if not files:
-        print(f"No .{config.TRACES_EXTENSION} found in {config.TRACES_PATH}")
+        print(f"No .{config.TRACES_EXT} found in {config.TRACES_PATH}")
         print(f"Export log from Mesen (or any emulator) and place it in {config.TRACES_DIR}")
         sys.exit(1)
     return files
 
-def load_trace_file(file):
+def read_trace_file(file):
     """Reads given file and return uniques instructions."""
 
     file_size = file.stat().st_size // 1024
-    print(f"  - Reading {file.name} ({file_size} Ko)")
+    print(f"  - Reading {file.name}... ({file_size} Ko)")
+    print(f"(Can be very long depending on file size, please be patient)")
 
     seen   = OrderedDict()
     hits   = Counter()
     seen_s = OrderedDict()
     hits_s = Counter()
-    
-    update_trace_dir(file.name)
 
     for line in file.open(encoding='utf-8', errors='replace'):
         line = line.rstrip()
@@ -144,24 +144,25 @@ def update_trace_dir(file_name):
     config.CODE_PATH = config.REPO_ROOT / config.CODE_DIR / trace_name
     
     # Create folder
-    print(f"    - Creating {trace_name} folder")
     config.CODE_PATH.mkdir(parents=True, exist_ok=True)
+    print(f"  - {trace_name} folder created")
 
 def print_trace_load(trace_name, total_lines_nb, unique_lines_nb, redond_lines_nb, hits_s, seen_s, banks):
     print(f'')
     print(f'{trace_name} loaded :')
     print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
     print(f'    {config.AUDIO_CPU}  : {sum(hits_s.values())} lines -> {len(seen_s)} uniques')
-    print(f'    Banks  : {banks}')
+    print(f'    Detected Banks  : {banks}')
 
 # /--------------------------------------/
 
 def write_bank(bank_id, adresses, seen, hits):
     """Write Bank_XX/Bank_XX.asm"""
 
-    dir_path = config.CODE_PATH / f'Bank_{bank_id}'
+    bank_name = f'Bank_{bank_id}'
+    dir_path = config.CODE_PATH / bank_name
     dir_path.mkdir(parents=True, exist_ok=True)
-    file = dir_path / f'Bank_{bank_id}.asm'
+    file = dir_path / f'{bank_name}.{config.CODE_EXT}'
 
     content = [
         f'; {config.CURRENT_TRACE_NAME}',
