@@ -8,16 +8,19 @@ REPO_ROOT = Path(__file__).parent.parent
 # Traces
 TRACES_DIR = "traces"
 TRACES_PATH = REPO_ROOT / TRACES_DIR
-TRACES_EXTENSION = "txt"
+TRACES_EXT = "txt"
 CURRENT_TRACE_NAME = "" # value updated in each file process
-KEEP_LOOP_TRACK = False
 
 # Code Banks
 CODE_DIR = "result"
 CODE_PATH = REPO_ROOT / CODE_DIR
+CODE_EXT = "asm"
 
 # Audio
 AUDIO_CPU = "SPC700"
+
+# Misc
+KEEP_LOOP_TRACK = False
 
 # /-----/ Pattern parsing /-----/
 
