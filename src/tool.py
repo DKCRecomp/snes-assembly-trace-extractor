@@ -5,7 +5,7 @@
 Log tracer converter to ASM
 =====================================
 Read txt files from directory traces/
-Generate asm files in code/
+Generate asm files in result/
 =====================================
 """
 
