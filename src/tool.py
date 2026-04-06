@@ -28,7 +28,7 @@ def print_start():
     print(f'\nResults are generated at : {config.CODE_PATH}\n')
 
 def print_end():
-    print('==================================')
+    print('\n==================================')
     print(f'            Finished')
     print('==================================\n')
 
@@ -97,8 +97,8 @@ def get_traces_files():
     files = sorted(config.TRACES_PATH.glob(f'*.{config.TRACES_EXT}'))
 
     if not files:
-        print(f"No .{config.TRACES_EXT} found in {config.TRACES_PATH}")
-        print(f"Export log from Mesen (or any emulator) and place it in {config.TRACES_DIR}")
+        print(f"\nNo .{config.TRACES_EXT} found in {config.TRACES_PATH}")
+        print(f"Export log from Mesen (or any emulator) and place it in {config.TRACES_DIR} before usage.\n")
         sys.exit(1)
     return files
 
@@ -142,10 +142,16 @@ def update_trace_dir(file_name):
 
     # We update globally code path for each trace file
     config.CODE_PATH = config.REPO_ROOT / config.CODE_DIR / trace_name
-    
+
     # Create folder
-    config.CODE_PATH.mkdir(parents=True, exist_ok=True)
-    print(f"  - {trace_name} folder created")
+    path = config.CODE_PATH
+    if path.exists():
+        print(f"  - {path} already exists, please remove it")
+        exit()
+
+
+    path.mkdir(parents=True, exist_ok=True)
+    print(f"  - {path} created")
 
 def print_trace_load(trace_name, total_lines_nb, unique_lines_nb, redond_lines_nb, hits_s, seen_s, banks):
     print(f'')
