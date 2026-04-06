@@ -1,7 +1,26 @@
 import re
+from pathlib import Path
+
+# /-----/ Globals /-----/
+
+REPO_ROOT = Path(__file__).parent.parent
+
+# Traces
+TRACES_DIR = "traces"
+TRACES_PATH = REPO_ROOT / TRACES_DIR
+TRACES_EXTENSION = "txt"
+CURRENT_TRACE_NAME = "" # value updated in each file process
+
+# Code Banks
+CODE_DIR = "result"
+CODE_PATH = REPO_ROOT / CODE_DIR
+
+# Audio
+AUDIO_CPU = "SPC700"
 
 # /-----/ Pattern parsing /-----/
 
+# CPU
 PAT_65816 = re.compile(
     r'^([0-9A-F]{6})\s+(\S.*?)\s{2,}'
     r'A:([0-9A-F]{4}) X:([0-9A-F]{4}) Y:([0-9A-F]{4}) '
@@ -9,13 +28,14 @@ PAT_65816 = re.compile(
     r'P:(\S+)'
 )
 
+# AUDIO
 PAT_SPC700 = re.compile(
     r'^([0-9A-F]{4})\s+(\S.*?)\s{2,}'
     r'A:[0-9A-F]{2} X:[0-9A-F]{2} Y:[0-9A-F]{2} '
     r'S:[0-9A-F]{2} P:(\S+)'
 )
 
-# /-----/ hardware registers SNES /-----/
+# /-----/ Hardware Registers /-----/
 
 HARDWARE_REGISTERS = {
     0x2100:'INIDISP', 0x2101:'OBSEL',    0x2102:'OAMADDL', 0x2103:'OAMADDH',
