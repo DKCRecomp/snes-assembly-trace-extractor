@@ -30,47 +30,117 @@ TRACES_EXTENSION = "txt"
 CODE_DIR = "code"
 CODE_PATH = REPO_ROOT / CODE_DIR
 
-def load_traces():
-    """Read .txt from traces directory and return uniques instructions."""
+def main():
+    display_start()
+    run()
+    display_end()
 
+def display_start():
+    print('================================================================')
+    print(f'            SNES Assembly Log Trace Extractor')
+    print('================================================================')
+    print('')
+
+def display_end():
+    print('')
+    print('==================================')
+    print(f'            Finished')
+    print('==================================')
+    print('')
+
+def run():
+    files = load_files()
+
+    for file in files:
+        trace_to_asm(file)
+
+def load_files():
     files = sorted(TRACES_PATH.glob(f'*.{TRACES_EXTENSION}'))
     if not files:
         print(f"No .{TRACES_EXTENSION} found in {TRACES_PATH}")
         print(f"Export log from Mesen (or any emulator) and place it in {TRACES_DIR}")
         sys.exit(1)
+    return files
+
+def trace_to_asm(file):
+
+    print(f'Reading in {TRACES_PATH}')
+    seen, hits, seen_s, hits_s = load_trace(file)
+
+    total_lines_nb   = sum(hits.values())
+    unique_lines_nb = len(seen)
+    redond_lines_nb  = total_lines_nb - unique_lines_nb
+    banks   = sorted(set(a[:2] for a in seen))
+
+    # /------------------------------/
+
+    print(f'')
+    print(f'Results :')
+    print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
+    print(f'    SPC700  : {sum(hits_s.values())} lines -> {len(seen_s)} uniques')
+    print(f'    Banks : {banks}')
+
+    # /------------------------------/
+
+    print(f'')
+    print(f'Writing in {CODE_DIR}')
+
+    by_bank = defaultdict(list)
+    for addr in seen:
+        by_bank[addr[:2]].append(addr)
+
+    for bank, addrs in sorted(by_bank.items()):
+        f = write_bank(bank, addrs, seen, hits)
+        print(f'    - {f.relative_to(REPO_ROOT)}  ({len(addrs)} instructions)')
+
+    if seen_s:
+        f = write_spc(seen_s, hits_s)
+        print(f'    - {f.relative_to(REPO_ROOT)}  ({len(seen_s)} instructions)')
+
+def load_trace(file):
+    """Read .txt from traces directory and return uniques instructions."""
 
     seen   = OrderedDict()
     hits   = Counter()
     seen_s = OrderedDict()
     hits_s = Counter()
 
-    for file in files:
-
-        file_size = file.stat().st_size // 1024
-        print(f"  - Reading {file.name} ({file_size} Ko)")
+    file_size = file.stat().st_size // 1024
+    print(f"  - Reading {file.name} ({file_size} Ko)")
                 
-        print(f"    - Creating {Path(file.name).with_suffix('')} folder")
-        create_trace_folder(file.name)
+    print(f"    - Creating {Path(file.name).with_suffix('')} folder")
+    create_trace_folder(file.name)
 
-        for line in file.open(encoding='utf-8', errors='replace'):
-            line = line.rstrip()
-            match = data.PAT_65816.match(line)
+    for line in file.open(encoding='utf-8', errors='replace'):
+        line = line.rstrip()
+        match = data.PAT_65816.match(line)
 
-            if match:
-                addr = match.group(1)
-                hits[addr] += 1
-                if addr not in seen:
-                    seen[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
-                continue
+        if match:
+            addr = match.group(1)
+            hits[addr] += 1
+            if addr not in seen:
+                seen[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
+            continue
 
-            match = data.PAT_SPC700.match(line)
-            if match:
-                addr = match.group(1)
-                hits_s[addr] += 1
-                if addr not in seen_s:
-                    seen_s[addr] = match.group(2).strip()
-
+        match = data.PAT_SPC700.match(line)
+        if match:
+            addr = match.group(1)
+            hits_s[addr] += 1
+            if addr not in seen_s:
+                seen_s[addr] = match.group(2).strip()
     return seen, hits, seen_s, hits_s
+
+def create_trace_folder(file_name):
+
+    # Remove `.txt` from file name
+    global GAME_FOLDER_NAME
+    GAME_FOLDER_NAME = Path(file_name).with_suffix('')
+
+    # We update globally code path for each trace file
+    global CODE_PATH 
+    CODE_PATH = REPO_ROOT / CODE_DIR / GAME_FOLDER_NAME
+
+    CODE_PATH.mkdir(parents=True, exist_ok=True)
 
 def comment_instr(instr, hits_addr):
     """Generate comment from a instruction."""
@@ -152,66 +222,6 @@ def write_spc(seen_s, hits_s):
 
     file.write_text('\n'.join(content) + '\n')
     return file
-
-def create_trace_folder(file_name):
-
-    # Remove `.txt` from file name
-    global GAME_FOLDER_NAME
-    GAME_FOLDER_NAME = Path(file_name).with_suffix('')
-
-    # We update globally code path for each trace file
-    global CODE_PATH 
-    CODE_PATH = REPO_ROOT / CODE_DIR / GAME_FOLDER_NAME
-
-    CODE_PATH.mkdir(parents=True, exist_ok=True)
-
-def trace_to_asm():
-
-    print(f'Reading in {TRACES_PATH}')
-    seen, hits, seen_s, hits_s = load_traces()
-
-    total_lines_nb   = sum(hits.values())
-    unique_lines_nb = len(seen)
-    redond_lines_nb  = total_lines_nb - unique_lines_nb
-    banks   = sorted(set(a[:2] for a in seen))
-
-    # /------------------------------/
-
-    print(f'')
-    print(f'Results :')
-    print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
-    print(f'    SPC700  : {sum(hits_s.values())} lines -> {len(seen_s)} uniques')
-    print(f'    Banks : {banks}')
-
-    # /------------------------------/
-
-    print(f'')
-    print(f'Writing in {CODE_DIR}')
-
-    by_bank = defaultdict(list)
-    for addr in seen:
-        by_bank[addr[:2]].append(addr)
-
-    for bank, addrs in sorted(by_bank.items()):
-        f = write_bank(bank, addrs, seen, hits)
-        print(f'    - {f.relative_to(REPO_ROOT)}  ({len(addrs)} instructions)')
-
-    if seen_s:
-        f = write_spc(seen_s, hits_s)
-        print(f'    - {f.relative_to(REPO_ROOT)}  ({len(seen_s)} instructions)')
-
-def main():
-    print('================================================================')
-    print(f'            SNES Assembly Log Trace Extractor')
-    print('================================================================')
-    print('')
-
-    trace_to_asm()
-
-    print('')
-    print('==================================')
-    print(f'            Finished')
-    print('==================================')
 
 if __name__ == '__main__':
     main()
