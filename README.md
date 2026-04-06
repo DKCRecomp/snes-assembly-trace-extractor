@@ -17,7 +17,7 @@ On the toolbar at the top, select `Trace Logger` :
 
 ![toolbar](./assets/toolbar.png)
 
-### **Make sure you got these exact settings for better compatibility :**
+Make sure you got these exact settings for better compatibility :
 
 ![trace-logger-settings](./assets/settings.png)
 
