@@ -49,9 +49,9 @@ bash run.sh
 
 This will reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `code/{FILE_NAME}`.
 
+> [!NOTE]
+> This process can be long depending on the trace files size.
+
 Here is a result example with a trace log named `DKC1_USA1_2.txt` :
 
 ![result](./assets/process-code-result.png)
-
-> [!NOTE]
-> This process can be long depending on the trace files size.
