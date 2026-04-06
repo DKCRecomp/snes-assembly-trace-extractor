@@ -1,6 +1,6 @@
 # SNES Assembly Extractor 
 
-This tool converts [Mesen](https://github.com/SourMesen/Mesen2) emulator `.txt` log traces, into structured `.asm` files.
+This tool converts [Mesen](https://github.com/SourMesen/Mesen2) emulator `txt` log traces, into structured `asm` files.
 
 It handles code repetitions and SPC700 audio code.
 
