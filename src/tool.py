@@ -26,7 +26,7 @@ def print_start():
     print('==============================================================')
     print(f'            SNES Assembly Log Trace Extractor')
     print('==============================================================')
-    print('')
+    print(f'\nResult is generated in : {config.CODE_PATH}\n')
 
 def print_end():
 
@@ -39,6 +39,7 @@ def print_end():
 # /--------------------------------------/
 
 def extract_traces():
+    config.KEEP_LOOP_TRACK = ask_keep_looped()
     files = load_traces_files()
     
     for file in files:
@@ -84,6 +85,9 @@ def extract_trace(file):
         print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_s)} instructions)')
 
     print('')
+
+def ask_keep_looped():
+    return input('Keep the tracked looped code in result ? (y/n): ').lower().startswith('y')
 
 # /--------------------------------------/
 
@@ -148,7 +152,7 @@ def print_trace_load(trace_name, total_lines_nb, unique_lines_nb, redond_lines_n
     print(f'{trace_name} loaded :')
     print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
     print(f'    {config.AUDIO_CPU}  : {sum(hits_s.values())} lines -> {len(seen_s)} uniques')
-    print(f'    Banks : {banks}')
+    print(f'    Banks  : {banks}')
 
 # /--------------------------------------/
 
@@ -172,15 +176,14 @@ def write_bank(bank_id, adresses, seen, hits):
         d = seen[addr]
 
         if prev is not None and addr_int > prev + 8:
-            content.append(f'')
-            content.append(f'; --- gap ${addr_int - prev:04X} bytes (non traced) ---')
-            content.append(f'')
+            content.append(f'\n; --- gap ${addr_int - prev:04X} bytes (non traced) ---\n')
 
-        com = comment_instr(d['instr'], hits[addr])
-        content.append(f'CODE_{addr}:  {d["instr"]:<36}{com}')
+        comment = generate_instr_comment(d['instr'], hits[addr])
+        content.append(f'CODE_{addr}:  {d["instr"]:<36}{comment}')
         prev = addr_int
 
-    file.write_text('\n'.join(content) + '\n')
+    content = '\n'.join(content) + '\n'
+    file.write_text(content)
     return file
  
 def write_audio(seen_s, hits_s):
@@ -206,8 +209,8 @@ def write_audio(seen_s, hits_s):
     file.write_text('\n'.join(content) + '\n')
     return file
 
-def comment_instr(instr, hits_addr):
-    """Generate comment for a given instruction."""
+def generate_instr_comment(instr, hits_addr):
+    """Generate a comment for a given instruction, and returns it."""
 
     mnemonic = instr.split()[0]
     parts = []
@@ -228,11 +231,12 @@ def comment_instr(instr, hits_addr):
             if v & 0x20: parts.append(f'A={size}b')
             if v & 0x10: parts.append(f'X/Y={size}b')
 
-    # Loop detected
-    if hits_addr > 1:
+    # Loop tracking
+    if config.KEEP_LOOP_TRACK and hits_addr > 1:
         parts.append(f'(looped x{hits_addr} in traces)')
 
-    return ('  ; ' + ', '.join(parts)) if parts else ''
+    comment = ('  ; ' + ', '.join(parts)) if parts else ''
+    return comment
 
 if __name__ == '__main__':
     main()

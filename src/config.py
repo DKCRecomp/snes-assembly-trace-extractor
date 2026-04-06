@@ -10,6 +10,7 @@ TRACES_DIR = "traces"
 TRACES_PATH = REPO_ROOT / TRACES_DIR
 TRACES_EXTENSION = "txt"
 CURRENT_TRACE_NAME = "" # value updated in each file process
+KEEP_LOOP_TRACK = False
 
 # Code Banks
 CODE_DIR = "result"
