@@ -3,7 +3,8 @@
 .idea
 
 # generated banks
-code/*
+result
+*.asm
 *.zip
 .zip
 

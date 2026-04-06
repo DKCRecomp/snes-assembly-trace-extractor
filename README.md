@@ -4,7 +4,7 @@ This tool converts [Mesen](https://github.com/SourMesen/Mesen2) emulator `.txt` 
 
 It handles code repetitions and SPC700 audio code.
 
-This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don't guarantee if it works for other emulators. Contact me if so.
+This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don't guarantee if it works for other emulators. Contact me if it does.
 
 Still in active developpement and might not work for now.
 
@@ -49,7 +49,7 @@ Press play button on the upper left to start trace creation :
 bash run.sh
 ```
 
-This will reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `code/{FILE_NAME}`.
+This will reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `result/{FILE_NAME}`.
 
 > [!NOTE]
 > This process can be long depending on the trace files size.
