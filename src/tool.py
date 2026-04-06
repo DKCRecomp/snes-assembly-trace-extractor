@@ -48,35 +48,18 @@ def extract_traces_files():
 def extract_trace_file(file):
     """Extract given trace files."""
 
-    print('\n==============================================================')
-    print(f'                Extracting {file.name}...')
-    print('==============================================================\n')
-
-    # ----- 1) load result -----
-    
-    update_trace_dir(file.name)
+    # 1) load result
     seen, hits, seen_s, hits_s = read_trace_file(file)
+    
+    # 2) code generation
+    generate_trace_code(seen, hits, seen_s, hits_s)
 
-    total_lines_nb = sum(hits.values())
-    unique_lines_nb = len(seen)
-    redond_lines_nb = total_lines_nb - unique_lines_nb
-    banks = sorted(set(a[:2] for a in seen))
-
-    print_trace_load(
-        config.CURRENT_TRACE_NAME, 
-        total_lines_nb, 
-        unique_lines_nb, 
-        redond_lines_nb, 
-        hits_s, seen_s, 
-        banks
-    )
-
-    # ----- 2) code writing -----
+def generate_trace_code(seen, hits, seen_s, hits_s):
 
     print('\n==============================================================')
     print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
     print('==============================================================\n')
- 
+
     by_bank = defaultdict(list)
     for addr in seen:
         by_bank[addr[:2]].append(addr)
@@ -108,14 +91,20 @@ def get_traces_files():
 def read_trace_file(file):
     """Reads given file and return uniques instructions."""
 
-    file_size = file.stat().st_size // 1024
-    print(f"  - Reading {file.name}... ({file_size} Ko)")
-    print(f"(Can be very long depending on file size, please be patient)")
-
+    print('\n==============================================================')
+    print(f'                Reading {file.name}...')
+    print('==============================================================\n')
+    
     seen   = OrderedDict()
     hits   = Counter()
     seen_s = OrderedDict()
     hits_s = Counter()
+
+    update_trace_dir(file.name)
+
+    file_size = file.stat().st_size // 1024
+    print(f"  - Process reading {file.name}... ({file_size} Ko)")
+    print(f"(Can be very long depending on file size, please be patient)")
 
     for line in file.open(encoding='utf-8', errors='replace'):
         line = line.rstrip()
@@ -134,6 +123,8 @@ def read_trace_file(file):
             hits_s[addr] += 1
             if addr not in seen_s:
                 seen_s[addr] = match.group(2).strip()
+
+    print_trace_load(seen, hits, seen_s, hits_s)
     return seen, hits, seen_s, hits_s
 
 def update_trace_dir(file_name):
@@ -156,11 +147,19 @@ def update_trace_dir(file_name):
     path.mkdir(parents=True, exist_ok=True)
     print(f"  - {path} created")
 
-def print_trace_load(trace_name, total_lines_nb, unique_lines_nb, redond_lines_nb, hits_s, seen_s, banks):
+def print_trace_load(seen, hits, seen_s, hits_s):
+
+    total_lines_nb = sum(hits.values())
+    unique_lines_nb = len(seen)
+    redond_lines_nb = total_lines_nb - unique_lines_nb
+    banks = sorted(set(a[:2] for a in seen))
+    sum_hits = sum(hits_s.values())
+    nb_seens = len(seen_s)
+
     print(f'')
-    print(f'{trace_name} loaded :')
+    print(f'{config.CURRENT_TRACE_NAME} loaded :')
     print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
-    print(f'    {config.AUDIO_CPU}  : {sum(hits_s.values())} lines -> {len(seen_s)} uniques')
+    print(f'    {config.AUDIO_CPU}  : {sum_hits} lines -> {nb_seens} uniques')
     print(f'    Detected Banks  : {banks}')
 
 # /--------------------------------------/
@@ -188,7 +187,7 @@ def write_bank(bank_id, adresses, seen, hits):
         if prev is not None and addr_int > prev + 8:
             content.append(f'\n; --- gap ${addr_int - prev:04X} bytes (non traced) ---\n')
 
-        comment = generate_instr_comment(d['instr'], hits[addr])
+        comment = get_instr_comment(d['instr'], hits[addr])
         content.append(f'CODE_{addr}:  {d["instr"]:<36}{comment}')
         prev = addr_int
 
@@ -219,7 +218,7 @@ def write_audio(seen_s, hits_s):
     file.write_text('\n'.join(content) + '\n')
     return file
 
-def generate_instr_comment(instr, hits_addr):
+def get_instr_comment(instr, hits_addr):
     """Generate a comment for a given instruction, and returns it."""
 
     mnemonic = instr.split()[0]
