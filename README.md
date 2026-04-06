@@ -11,7 +11,7 @@ This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don
 
 ## How to create a game code trace log ?
 
-### **1. Code capture using Mesen**
+### **1. Launch Trace Logger**
 
 On the toolbar at the top, select `Trace Logger` :
 
