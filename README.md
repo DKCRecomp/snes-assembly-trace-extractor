@@ -17,7 +17,20 @@ Overview             |   Bank_00.asm
 :-------------------------:|:-------------------------:
 ![result-overview](./img/result-overview.png)  |  ![result-bank](./img/result-bank.png)
 
-## How to create a game code trace log ?
+## How to use it ?
+
+Before using it, you will need to get trace logs.
+
+```bash
+bash run.sh
+```
+
+This will reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `result/{FILE_NAME}`.
+
+> [!NOTE]
+> This process can be long depending on the trace files size.
+
+## How to get game code trace ?
 
 ### **1. Launch Trace Logger**
 
@@ -48,14 +61,3 @@ Press play button on the upper left to start trace creation :
 > [!WARNING]
 > Trace logging can quickly generate VERY large .txt file, a file from a 20min session can take up to ~60 Go !
 > Make sure you got large free space.
-
-## How to use it ?
-
-```bash
-bash run.sh
-```
-
-This will reads **all** `.txt` from `traces/`, delete double code, and generate `.asm` files in `result/{FILE_NAME}`.
-
-> [!NOTE]
-> This process can be long depending on the trace files size.
