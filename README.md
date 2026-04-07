@@ -9,6 +9,14 @@ This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don
 > [!IMPORTANT]
 > **No rom, game assets, nor extracted code in this repository**.
 
+## Example result
+
+Using a log named `DKC1_USA1_2.txt` :
+
+Overview             |   Bank_00.asm
+:-------------------------:|:-------------------------:
+![result-overview](./img/result-overview.png)  |  ![result-bank](./img/result-bank.png)
+
 ## How to create a game code trace log ?
 
 ### **1. Launch Trace Logger**
@@ -51,7 +59,3 @@ This will reads **all** `.txt` from `traces/`, delete double code, and generate 
 
 > [!NOTE]
 > This process can be long depending on the trace files size.
-
-Here is a result example with a trace log named `DKC1_USA1_2.txt` :
-
-![result](./img/process-code-result.png)
