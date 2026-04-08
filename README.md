@@ -6,6 +6,8 @@ It handles code repetitions and SPC700 audio code.
 
 This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don't guarantee if it works for other emulators. Contact me if it does.
 
+It should work for any SNES game.
+
 > [!IMPORTANT]
 > **No rom, game assets, nor extracted code in this repository**.
 
@@ -13,9 +15,9 @@ This was developed using [Mesen](https://github.com/SourMesen/Mesen2), but I don
 
 Using a log named `DKC1_USA1_2.txt` :
 
-Overview             |   Bank_00.asm
+Overview | Bank_00.asm
 :-------------------------:|:-------------------------:
-![result-overview](./img/result-overview.png)  |  ![result-bank](./img/result-bank.png)
+![result-overview](./img/result-overview.png) | ![result-bank](./img/result-bank.png)
 
 ## How to use it ?
 
