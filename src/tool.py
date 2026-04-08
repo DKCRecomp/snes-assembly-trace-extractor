@@ -28,9 +28,9 @@ def print_start():
     print(f'\nResults are generated at : {config.CODE_PATH}\n')
 
 def print_end():
-    print('\n==================================')
-    print(f'            Finished')
-    print('==================================\n')
+    print('\n==============================================================')
+    print(f'                        Finished')
+    print('==============================================================\n')
 
 # /--------------------------------------/
 
@@ -49,18 +49,16 @@ def convert_file(file):
     # 1) content extraction
     start = time.time()
     seen_code, hits_code, seen_audio, hits_audio = read_file(file)
-
-    end = time.time()
-    print("Duration")
-    print("{:.2f}".format(end - start))
+    print_duration(time.time() - start)
 
     # 2) code generation
     start = time.time()
     generate_code(seen_code, hits_code, seen_audio, hits_audio)
-    
-    end = time.time()
-    print("Duration")
-    print("{:.2f}".format(end - start))
+    print_duration(time.time() - start)
+
+def print_duration(duration):
+    """Print given duration in seconds format."""
+    print("\nDuration: " + "{:.2f}".format(duration) +"s")
 
 def ask_keep_loop_track():
     return input('Keep tracked looped code in result ? (y/n): ').lower().startswith('y')
@@ -93,36 +91,38 @@ def read_file(file):
     update_trace_dir(file.name)
 
     file_size = file.stat().st_size // 1024
-    print(f"  - Process reading {file.name}... ({file_size} Ko)")
+    print(f"  - Process reading {file.name}... ({file_size} Ko)\n")
     print(f"(Can be very long depending on file size, please be patient)")
 
     with file.open(encoding='utf-8', errors='replace') as content:
 
-        pat_cpu = config.PAT_65816
-        pat_audio = config.PAT_SPC700
+        pattern_cpu = config.PAT_65816
+        pattern_audio = config.PAT_SPC700
 
         for line in content:
             line = line.rstrip()
-
-            # try to find code
-            match = pat_cpu.match(line)
-            if match: # if code found
-                addr = match.group(1)
-                hits_code[addr] += 1
-                if addr not in seen_code:
-                    seen_code[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
-                continue
-
-            # try to find audio
-            match = pat_audio.match(line)
-            if match: # if audio found
-                addr = match.group(1)
-                hits_audio[addr] += 1
-                if addr not in seen_audio:
-                    seen_audio[addr] = match.group(2).strip()
+            # cpu
+            extract_line(line, pattern_cpu, hits_code, seen_code)
+            # audio
+            extract_line(line, pattern_audio, hits_audio, seen_audio, False)
 
     print_read_result(seen_code, hits_code, seen_audio, hits_audio)
     return seen_code, hits_code, seen_audio, hits_audio
+
+def extract_line(line, pattern, hits, seens, is_cpu = True):
+    """Reads given line and extract content."""
+
+    match = pattern.match(line)
+    if match: # pattern found
+
+        addr = match.group(1)
+        hits[addr] += 1
+
+        if addr not in seens:
+            if is_cpu: # cpu
+                seens[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
+            else: # audio
+                seens[addr] = match.group(2).strip()
 
 def print_read_result(seen_code, hits_code, seen_audio, hits_audio):
 
@@ -156,7 +156,7 @@ def update_trace_dir(file_name):
         exit()
 
     path.mkdir(parents=True, exist_ok=True)
-    print(f"  - {path} created")
+    print(f"  - Created folder {path}")
 
 # /--------------------------------------/
 
