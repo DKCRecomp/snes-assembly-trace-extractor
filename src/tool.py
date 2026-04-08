@@ -16,9 +16,11 @@ from collections import Counter, OrderedDict, defaultdict
 
 import config
 
+import time
+
 def main():
     print_start()
-    extract_traces_files()
+    convert_files()
     print_end()
 
 def print_start():
@@ -34,32 +36,40 @@ def print_end():
 
 # /--------------------------------------/
 
-def extract_traces_files():
-    """Extract all available traces files."""
+def convert_files():
+    """Converts all available traces files."""
 
-    print('Start extracting traces...\n')
+    print('Start converting traces...\n')
+    config.KEEP_LOOP_TRACK = ask_keep_loop_track()
 
-    config.KEEP_LOOP_TRACK = ask_keep_looped()
-    files = get_traces_files()
-    
-    for file in files:
-        extract_trace_file(file)
+    for file in get_files():
+        convert_file(file)
 
-def extract_trace_file(file):
-    """Extract given trace files."""
+def convert_file(file):
+    """Converts given trace file."""
 
-    # 1) load result
-    seen, hits, seen_s, hits_s = read_trace_file(file)
+    # 1) content extraction
+    start = time.time()
+    seen, hits, seen_s, hits_s = read_file(file)
+
+    end = time.time()
+    print("Duration")
+    print("{:.2f}".format(end - start))
 
     # 2) code generation
-    generate_trace_code(seen, hits, seen_s, hits_s)
+    start = time.time()
+    generate_code(seen, hits, seen_s, hits_s)
+    
+    end = time.time()
+    print("Duration")
+    print("{:.2f}".format(end - start))
 
-def ask_keep_looped():
+def ask_keep_loop_track():
     return input('Keep tracked looped code in result ? (y/n): ').lower().startswith('y')
 
 # /--------------------------------------/
 
-def get_traces_files():
+def get_files():
     """Load all files from traces directory, and return them."""
 
     files = sorted(config.TRACES_PATH.glob(f'*.{config.TRACES_EXT}'))
@@ -70,8 +80,8 @@ def get_traces_files():
         sys.exit(1)
     return files
 
-def read_trace_file(file):
-    """Reads given file and return uniques instructions."""
+def read_file(file):
+    """Reads given trace file and return uniques instructions. Takes the most processing duration."""
 
     print('\n==============================================================')
     print(f'                Reading {file.name}...')
@@ -88,48 +98,33 @@ def read_trace_file(file):
     print(f"  - Process reading {file.name}... ({file_size} Ko)")
     print(f"(Can be very long depending on file size, please be patient)")
 
-    for line in file.open(encoding='utf-8', errors='replace'):
-        line = line.rstrip()
-        match = config.PAT_65816.match(line)
+    with file.open(encoding='utf-8', errors='replace') as content:
 
-        if match:
-            addr = match.group(1)
-            hits[addr] += 1
-            if addr not in seen:
-                seen[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
-            continue
+        pat_cpu = config.PAT_65816
+        pat_audio = config.PAT_SPC700
 
-        match = config.PAT_SPC700.match(line)
-        if match:
-            addr = match.group(1)
-            hits_s[addr] += 1
-            if addr not in seen_s:
-                seen_s[addr] = match.group(2).strip()
+        for line in content:
+            line = line.rstrip()
 
-    print_trace_load(seen, hits, seen_s, hits_s)
+            match = pat_cpu.match(line)
+            if match:
+                addr = match.group(1)
+                hits[addr] += 1
+                if addr not in seen:
+                    seen[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
+                continue
+
+            match = pat_audio.match(line)
+            if match:
+                addr = match.group(1)
+                hits_s[addr] += 1
+                if addr not in seen_s:
+                    seen_s[addr] = match.group(2).strip()
+
+    print_read_result(seen, hits, seen_s, hits_s)
     return seen, hits, seen_s, hits_s
 
-def update_trace_dir(file_name):
-    """Create a folder for specified file name, and update current trace name value."""
-
-    # Remove `.txt` from file name
-    trace_name = Path(file_name).with_suffix('')
-    config.CURRENT_TRACE_NAME = trace_name
-
-    # We update globally code path for each trace file
-    config.CODE_PATH = config.REPO_ROOT / config.CODE_DIR / trace_name
-
-    # Create folder
-    path = config.CODE_PATH
-    if path.exists():
-        print(f"  - {path} already exists, please remove it")
-        exit()
-
-
-    path.mkdir(parents=True, exist_ok=True)
-    print(f"  - {path} created")
-
-def print_trace_load(seen, hits, seen_s, hits_s):
+def print_read_result(seen, hits, seen_s, hits_s):
 
     total_lines_nb = sum(hits.values())
     unique_lines_nb = len(seen)
@@ -144,9 +139,28 @@ def print_trace_load(seen, hits, seen_s, hits_s):
     print(f'    {config.AUDIO_CPU}  : {sum_hits} lines -> {nb_seens} uniques')
     print(f'    Detected Banks  : {banks}')
 
+def update_trace_dir(file_name):
+    """Create a folder for specified file name, and update current trace name value."""
+
+    # Remove `.txt` from file name
+    trace_name = Path(file_name).with_suffix('')
+    config.CURRENT_TRACE_NAME = trace_name
+
+    # We update globally code path for each trace file
+    config.CODE_PATH = config.REPO_ROOT / config.CODE_DIR / trace_name
+
+    # Create folder
+    path = config.CODE_PATH
+    if path.exists():
+        print(f"  - {config.CODE_DIR}/{trace_name} already exists, please remove it before running tool.")
+        exit()
+
+    path.mkdir(parents=True, exist_ok=True)
+    print(f"  - {path} created")
+
 # /--------------------------------------/
 
-def generate_trace_code(seen, hits, seen_s, hits_s):
+def generate_code(seen, hits, seen_s, hits_s):
 
     print('\n==============================================================')
     print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
