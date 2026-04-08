@@ -5,18 +5,19 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 
-# Traces
+# Trace logs
 TRACES_DIR = "traces"
 TRACES_PATH = REPO_ROOT / TRACES_DIR
 TRACES_EXT = "txt"
 CURRENT_TRACE_NAME = "" # value updated in each file process
 
-# Code Banks
+# Code Banks (cpu code and audio)
 CODE_DIR = "result"
 CODE_PATH = REPO_ROOT / CODE_DIR
 CODE_EXT = "asm"
 
-# Audio
+# CPUs
+CPU = "65C816"
 AUDIO_CPU = "SPC700"
 
 # Misc

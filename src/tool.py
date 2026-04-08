@@ -10,13 +10,11 @@ Generate asm files in result/
 """
 
 import re
-from pathlib import Path
 import sys
-from collections import Counter, OrderedDict, defaultdict
-
-import config
-
 import time
+from pathlib import Path
+from collections import Counter, OrderedDict, defaultdict
+import config # globals
 
 def main():
     print_start()
@@ -106,16 +104,18 @@ def read_file(file):
         for line in content:
             line = line.rstrip()
 
+            # try to find code
             match = pat_cpu.match(line)
-            if match:
+            if match: # if code found
                 addr = match.group(1)
                 hits_code[addr] += 1
                 if addr not in seen_code:
                     seen_code[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
                 continue
 
+            # try to find audio
             match = pat_audio.match(line)
-            if match:
+            if match: # if audio found
                 addr = match.group(1)
                 hits_audio[addr] += 1
                 if addr not in seen_audio:
@@ -135,8 +135,8 @@ def print_read_result(seen_code, hits_code, seen_audio, hits_audio):
 
     print(f'')
     print(f'{config.CURRENT_TRACE_NAME} loaded :')
-    print(f'    65C816  : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
-    print(f'    {config.AUDIO_CPU}  : {sum_hits} lines -> {nb_seens} uniques')
+    print(f'    {config.CPU}    : {total_lines_nb} lines -> {unique_lines_nb} uniques ({redond_lines_nb} double code deleted)')
+    print(f'    {config.AUDIO_CPU}    : {sum_hits} lines -> {nb_seens} uniques')
     print(f'    Detected Banks  : {banks}')
 
 def update_trace_dir(file_name):
