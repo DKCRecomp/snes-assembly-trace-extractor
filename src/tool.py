@@ -77,18 +77,21 @@ def get_files():
     return files
 
 def read_file(file):
-    """Reads given trace file and return uniques instructions. Takes the most processing duration."""
+    """
+    Reads given trace file and return uniques instructions. 
+    Takes the most processing duration.
+    """
 
     print('\n==============================================================')
     print(f'                Reading {file.name}...')
     print('==============================================================\n')
     
+    update_trace_dir(file.name)
+
     seen_code   = OrderedDict()
     hits_code   = Counter()
     seen_audio = OrderedDict()
     hits_audio = Counter()
-
-    update_trace_dir(file.name)
 
     file_size = file.stat().st_size // 1024
     print(f"  - Process reading {file.name}... ({file_size} Ko)\n")
@@ -98,31 +101,46 @@ def read_file(file):
 
         pattern_cpu = config.PAT_65816
         pattern_audio = config.PAT_SPC700
+        match_already_found = False
 
         for line in content:
             line = line.rstrip()
-            # cpu
-            extract_line(line, pattern_cpu, hits_code, seen_code)
-            # audio
-            extract_line(line, pattern_audio, hits_audio, seen_audio, False)
+
+            # Try to extract cpu
+            match_already_found = extract_line(line, pattern_cpu, hits_code, seen_code)
+
+            # Try to extract audio
+            if not match_already_found:
+                extract_line(line, pattern_audio, hits_audio, seen_audio, False)
 
     print_read_result(seen_code, hits_code, seen_audio, hits_audio)
     return seen_code, hits_code, seen_audio, hits_audio
 
-def extract_line(line, pattern, hits, seens, is_cpu = True):
-    """Reads given line and extract content."""
+def extract_line(line, pattern, hits, seens, is_cpu_line = True):
+    """
+    Reads given line and extract content.
+    Returns True if any matching was found, False otherwise.
+    Takes the most processing duration.
+    """
 
     match = pattern.match(line)
-    if match: # pattern found
+    # Pattern found
+    if match: 
 
+        # Add addr in collection
         addr = match.group(1)
         hits[addr] += 1
 
+        # New addr
         if addr not in seens:
-            if is_cpu: # cpu
+            # Addr is cpu
+            if is_cpu_line: 
                 seens[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
-            else: # audio
+                return True
+            # Addr is audio
+            else:
                 seens[addr] = match.group(2).strip()
+                return False
 
 def print_read_result(seen_code, hits_code, seen_audio, hits_audio):
 
@@ -162,11 +180,9 @@ def update_trace_dir(file_name):
 
 def generate_code(seen_code, hits_code, seen_audio, hits_audio):
 
-    print('\n==============================================================')
-    print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
-    print('==============================================================\n')
-
+    print_generate_code_header()
     by_bank = defaultdict(list)
+
     for addr in seen_code:
         by_bank[addr[:2]].append(addr)
 
@@ -177,6 +193,11 @@ def generate_code(seen_code, hits_code, seen_audio, hits_audio):
     if seen_audio:
         file = write_audio(seen_audio, hits_audio)
         print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_audio)} instructions)')
+
+def print_generate_code_header():
+    print('\n==============================================================')
+    print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
+    print('==============================================================\n')
 
 def write_bank(bank_id, adresses, seen_code, hits_code):
     """Write Bank_XX/Bank_XX.asm"""
@@ -229,7 +250,8 @@ def write_audio(seen_audio, hits_audio):
         com = f'  ; (looped x{c} in traces)' if c > 1 else ''
         content.append(f'SPC_{addr}:  {instr:<30}{com}')
 
-    file.write_text('\n'.join(content) + '\n')
+    content = '\n'.join(content) + '\n'
+    file.write_text(content)
     return file
 
 def get_instr_comment(instr, hits_addr):
