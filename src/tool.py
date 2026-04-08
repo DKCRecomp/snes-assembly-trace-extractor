@@ -50,7 +50,7 @@ def convert_file(file):
 
     # 1) content extraction
     start = time.time()
-    seen, hits, seen_s, hits_s = read_file(file)
+    seen_code, hits, seen_audio, hits_s = read_file(file)
 
     end = time.time()
     print("Duration")
@@ -58,7 +58,7 @@ def convert_file(file):
 
     # 2) code generation
     start = time.time()
-    generate_code(seen, hits, seen_s, hits_s)
+    generate_code(seen_code, hits, seen_audio, hits_s)
     
     end = time.time()
     print("Duration")
@@ -87,9 +87,9 @@ def read_file(file):
     print(f'                Reading {file.name}...')
     print('==============================================================\n')
     
-    seen   = OrderedDict()
+    seen_code   = OrderedDict()
     hits   = Counter()
-    seen_s = OrderedDict()
+    seen_audio = OrderedDict()
     hits_s = Counter()
 
     update_trace_dir(file.name)
@@ -110,28 +110,28 @@ def read_file(file):
             if match:
                 addr = match.group(1)
                 hits[addr] += 1
-                if addr not in seen:
-                    seen[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
+                if addr not in seen_code:
+                    seen_code[addr] = {'instr': match.group(2).strip(), 'P': match.group(6)}
                 continue
 
             match = pat_audio.match(line)
             if match:
                 addr = match.group(1)
                 hits_s[addr] += 1
-                if addr not in seen_s:
-                    seen_s[addr] = match.group(2).strip()
+                if addr not in seen_audio:
+                    seen_audio[addr] = match.group(2).strip()
 
-    print_read_result(seen, hits, seen_s, hits_s)
-    return seen, hits, seen_s, hits_s
+    print_read_result(seen_code, hits, seen_audio, hits_s)
+    return seen_code, hits, seen_audio, hits_s
 
-def print_read_result(seen, hits, seen_s, hits_s):
+def print_read_result(seen_code, hits, seen_audio, hits_s):
 
     total_lines_nb = sum(hits.values())
-    unique_lines_nb = len(seen)
+    unique_lines_nb = len(seen_code)
     redond_lines_nb = total_lines_nb - unique_lines_nb
-    banks = sorted(set(a[:2] for a in seen))
+    banks = sorted(set(a[:2] for a in seen_code))
     sum_hits = sum(hits_s.values())
-    nb_seens = len(seen_s)
+    nb_seens = len(seen_audio)
 
     print(f'')
     print(f'{config.CURRENT_TRACE_NAME} loaded :')
@@ -160,25 +160,25 @@ def update_trace_dir(file_name):
 
 # /--------------------------------------/
 
-def generate_code(seen, hits, seen_s, hits_s):
+def generate_code(seen_code, hits, seen_audio, hits_s):
 
     print('\n==============================================================')
     print(f'                 Generating {config.CODE_EXT} at /{config.CODE_DIR}...')
     print('==============================================================\n')
 
     by_bank = defaultdict(list)
-    for addr in seen:
+    for addr in seen_code:
         by_bank[addr[:2]].append(addr)
 
     for bank, addrs in sorted(by_bank.items()):
-        file = write_bank(bank, addrs, seen, hits)
+        file = write_bank(bank, addrs, seen_code, hits)
         print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(addrs)} instructions)')
 
-    if seen_s:
-        file = write_audio(seen_s, hits_s)
-        print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_s)} instructions)')
+    if seen_audio:
+        file = write_audio(seen_audio, hits_s)
+        print(f'    - {file.relative_to(config.REPO_ROOT)}  ({len(seen_audio)} instructions)')
 
-def write_bank(bank_id, adresses, seen, hits):
+def write_bank(bank_id, adresses, seen_code, hits):
     """Write Bank_XX/Bank_XX.asm"""
 
     bank_name = f'Bank_{bank_id}'
@@ -196,7 +196,7 @@ def write_bank(bank_id, adresses, seen, hits):
     prev = None
     for addr in adresses:
         addr_int = int(addr, 16)
-        d = seen[addr]
+        d = seen_code[addr]
 
         if prev is not None and addr_int > prev + 8:
             content.append(f'\n; --- gap ${addr_int - prev:04X} bytes (non traced) ---\n')
@@ -209,7 +209,7 @@ def write_bank(bank_id, adresses, seen, hits):
     file.write_text(content)
     return file
  
-def write_audio(seen_s, hits_s):
+def write_audio(seen_audio, hits_s):
     """Write SPC700/SPC700.asm (Audio CPU)"""
 
     directory = config.CODE_PATH / config.AUDIO_CPU
@@ -224,7 +224,7 @@ def write_audio(seen_s, hits_s):
         '',
     ]
     
-    for addr, instr in seen_s.items():
+    for addr, instr in seen_audio.items():
         c = hits_s[addr]
         com = f'  ; (looped x{c} in traces)' if c > 1 else ''
         content.append(f'SPC_{addr}:  {instr:<30}{com}')
